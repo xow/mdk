@@ -101,7 +101,7 @@ class MeerkatCommand(Command):
             }
         ),
         (
-            ['--commands-on-lines'],
+            ['-l', '--commands-on-lines'],
             {
                 'action': 'store_true',
                 'dest': 'linify',
@@ -121,8 +121,6 @@ class MeerkatCommand(Command):
         mode = args.mode
         if args.syntax:
             mode = 'syntax'
-        elif args.lines:
-            mode = 'lines'
         elif args.test:
             mode = 'test'
         elif args.all:
@@ -133,39 +131,35 @@ class MeerkatCommand(Command):
         # TODO if codechecker is not installed, then mdk plugin install local_codechecker
         # TODO if moodlecheck is not installed, then mdk plugin install local_moodlecheck
 
-        after = ''
-        before = ''
         modifiedFiles = git.modifiedFiles(args.branch)
 
         if mode in ('syntax', 'all'):
 
             for modifiedFile in modifiedFiles:
-                after += '\n=====\n(After) File: %s\n=====\n' % modifiedFile
-                after += self.syntaxCheck(modifiedFile)
 
-            if args.oldSyntax:
-
-                stashed = git.stash()
-
-                git.checkout(args.branch)
-
-                for modifiedFile in modifiedFiles:
-                    before += '\n=====\n(Before) File: %s\n=====\n' % modifiedFile
-                    before += self.syntaxCheck(modifiedFile)
+                print '%s:' % modifiedFile
                 
-                git.checkout('@{-1}')
+                diff = self.runCommand("git diff %s %s" % (args.branch, modifiedFile))
 
-                if (stashed):
-                    git.stash(command='pop')
+                changedLineNums = []
+                ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@', diff, re.MULTILINE)
 
-                #os.environ['before'] = before
-                #os.environ['after'] = after
+                for lineRange in ranges:
+                    start = int(lineRange[2])
+                    count = int(lineRange[3])
+                    # TODO only add the ones that have + signs...
+                    changedLineNums += range(start, start+count);
 
-                #subprocess('diff -y <(printf "${before}") <(printf "${after}")')
+                changedLinesRegex = '|'.join([str(x) for x in changedLineNums])
 
-                print before
+                syntaxResults = self.syntaxCheck(modifiedFile)
+                changedLines = re.findall('(^\s*(' + changedLinesRegex + ')\s.*)', syntaxResults, re.MULTILINE) # TODO handle multiline codechecker problems
+                print '\n'.join([str(x[0]) for x in changedLines])
 
-            print after
+                docsResults = self.docsCheck(modifiedFile)
+
+                changedLines = re.findall('(.*\sline="(' + changedLinesRegex + ')".*)', docsResults, re.MULTILINE)
+                print '\n'.join([str(x[0]) for x in changedLines])
 
         if mode in ('test', 'all'):
 
@@ -188,7 +182,6 @@ class MeerkatCommand(Command):
                     except ValueError as e:
                         currentPath = ''
 
-
                 testDirectories.append(testDirectory)
 
             testDirectories = list(set(testDirectories))
@@ -197,6 +190,7 @@ class MeerkatCommand(Command):
 
                 unitTests = []
                 behatTests = []
+
 
                 unitTests.extend(self.getSubfilesWithExtension(testDirectory, '_test.php'))
 
@@ -218,14 +212,12 @@ class MeerkatCommand(Command):
                         print '%s &&' % command,
 
     def syntaxCheck(self, file):
-
         codechecker = Popen(['php', 'local/codechecker/run.php', file], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        diagnosis = codechecker.communicate()[0];
+        return codechecker.communicate()[0];
 
+    def docsCheck(self, file):
         mooodlecheck = Popen(['php', 'local/moodlecheck/cli/moodlecheck.php', '-p=%s' % file], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        diagnosis += mooodlecheck.communicate()[0];
-
-        return diagnosis
+        return mooodlecheck.communicate()[0];
 
     def getSubfilesWithExtension(self, folder, extension):
 
