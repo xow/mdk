@@ -219,6 +219,9 @@ class MeerkatCommand(Command):
 
         subfilesWithExtension = []
 
+        if folder is None:
+            return []
+
         subfiles = os.listdir(folder)
 
         for file in subfiles:
