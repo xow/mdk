@@ -100,6 +100,14 @@ class MeerkatCommand(Command):
                 'help': 'Run behat tests as well as unit tests'
             }
         ),
+        (
+            ['--commands-on-lines'],
+            {
+                'action': 'store_true',
+                'dest': 'linify',
+                'help': 'Print out test commands on seperate lines'
+            }
+        ),
     ]
     _description = 'Tools to help you peer review an issue, or automatically check your issue before submitting for peer review'
 
@@ -113,6 +121,8 @@ class MeerkatCommand(Command):
         mode = args.mode
         if args.syntax:
             mode = 'syntax'
+        elif args.lines:
+            mode = 'lines'
         elif args.test:
             mode = 'test'
         elif args.all:
@@ -202,6 +212,8 @@ class MeerkatCommand(Command):
                 for command in commands:
                     if (args.run):
                         print self.runCommand(command)
+                    elif (args.linify):
+                        print '%s\n' % command,
                     else:
                         print '%s &&' % command,
 
