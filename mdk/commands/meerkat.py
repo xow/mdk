@@ -142,13 +142,19 @@ class MeerkatCommand(Command):
                 diff = self.runCommand("git diff %s %s" % (args.branch, modifiedFile))
 
                 changedLineNums = []
-                ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@', diff, re.MULTILINE)
+                ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@.*\n(.*\n([^@].*\n)*^)', diff, re.MULTILINE)
 
                 for lineRange in ranges:
                     start = int(lineRange[2])
-                    count = int(lineRange[3])
-                    # TODO only add the ones that have + signs...
-                    changedLineNums += range(start, start+count);
+                    lineNo = start
+
+                    thisDiff = lineRange[4].splitlines()
+                    for diffLine in thisDiff:
+                        if re.match(r'\s*\+', diffLine):
+                            changedLineNums.append(lineNo)
+                        if re.match(r'\s*\-', diffLine):
+                            lineNo -= 1
+                        lineNo += 1
 
                 changedLinesRegex = '|'.join([str(x) for x in changedLineNums])
 
@@ -157,9 +163,10 @@ class MeerkatCommand(Command):
                 print '\n'.join([str(x[0]) for x in changedLines])
 
                 docsResults = self.docsCheck(modifiedFile)
-
                 changedLines = re.findall('(.*\sline="(' + changedLinesRegex + ')".*)', docsResults, re.MULTILINE)
                 print '\n'.join([str(x[0]) for x in changedLines])
+
+                # TODO split apart the results of each for more consistent formatting
 
         if mode in ('test', 'all'):
 
