@@ -159,7 +159,7 @@ class MeerkatCommand(Command):
                 changedLinesRegex = '|'.join([str(x) for x in changedLineNums])
 
                 syntaxResults = self.syntaxCheck(modifiedFile)
-                changedLines = re.findall('(^\s*(' + changedLinesRegex + ')\s.*)', syntaxResults, re.MULTILINE) # TODO handle multiline codechecker problems
+                changedLines = re.findall('(^\s*(' + changedLinesRegex + ')\s.*(\n\s*\|.*$)*)', syntaxResults, re.MULTILINE)
                 print '\n'.join([str(x[0]) for x in changedLines])
 
                 docsResults = self.docsCheck(modifiedFile)
