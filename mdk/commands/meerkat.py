@@ -160,13 +160,12 @@ class MeerkatCommand(Command):
 
                 syntaxResults = self.syntaxCheck(modifiedFile)
                 changedLines = re.findall('(^\s*(' + changedLinesRegex + ')\s.*(\n\s*\|.*$)*)', syntaxResults, re.MULTILINE)
-                print '\n'.join([str(x[0]) for x in changedLines])
+                print '\n'.join([str(x[0]) for x in changedLines]) # TODO Split apart results for more consistent formatting
 
                 docsResults = self.docsCheck(modifiedFile)
-                changedLines = re.findall('(.*\sline="(' + changedLinesRegex + ')".*)', docsResults, re.MULTILINE)
-                print '\n'.join([str(x[0]) for x in changedLines])
-
-                # TODO split apart the results of each for more consistent formatting
+                changedLines = re.findall('(.*\sline="(' + changedLinesRegex + ')"\sseverity="([^"]*)"\smessage="([^"]*)".*)', docsResults, re.MULTILINE)
+                for changedLine in changedLines:
+                    print changedLine[1] + ' (' + changedLine[2] + '): ' + changedLine[3]
 
         if mode in ('test', 'all'):
 
