@@ -220,11 +220,11 @@ class MeerkatCommand(Command):
 
     def syntaxCheck(self, file):
         codechecker = Popen(['php', 'local/codechecker/run.php', file], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        return codechecker.communicate()[0];
+        return codechecker.communicate()[0]
 
     def docsCheck(self, file):
         mooodlecheck = Popen(['php', 'local/moodlecheck/cli/moodlecheck.php', '-p=%s' % file], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        return mooodlecheck.communicate()[0];
+        return mooodlecheck.communicate()[0]
 
     def getSubfilesWithExtension(self, folder, extension):
 
