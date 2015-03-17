@@ -58,7 +58,7 @@ class MeerkatCommand(Command):
             {
                 'action': 'store_true',
                 'dest': 'test',
-                'help': 'test mode. Will give you commands to run to test this patch, or run the commands automatically with -r'
+                'help': 'test mode. Will give you commands to unit test and behat test this patch, or run the commands automatically with -r'
             }
         ),
         (
@@ -94,10 +94,17 @@ class MeerkatCommand(Command):
             }
         ),
         (
+            ['-u', '--unit'],
+            {
+                'action': 'store_true',
+                'help': 'Run unit tests only'
+            }
+        ),
+        (
             ['--behat'],
             {
                 'action': 'store_true',
-                'help': 'Run behat tests as well as unit tests'
+                'help': 'Run behat tests only'
             }
         ),
         (
@@ -118,13 +125,17 @@ class MeerkatCommand(Command):
             raise Exception('This is not a Moodle instance')
 
         # Get the mode.
-        mode = args.mode
         if args.syntax:
             mode = 'syntax'
         elif args.test:
             mode = 'test'
         elif args.all:
             mode = 'all'
+        else:
+            if args.behat or args.unit:
+                mode = 'test'
+            elif args.mode:
+                mode = args.mode
 
         git = M.git()
 
@@ -205,9 +216,12 @@ class MeerkatCommand(Command):
 
                     behatTests.extend(self.getSubfilesWithExtension('%s/behat' % testDirectory, '.feature'))
 
-                commands = ['mdk phpunit -r -u %s' % s for s in unitTests]
+                commands = []
 
-                if (args.behat):
+                if (not args.behat or args.unit):
+                    commands.extend(['mdk phpunit -r -u %s' % s for s in unitTests])
+
+                if (args.behat or not args.unit):
                     commands.extend(['mdk behat -r -f %s' % s for s in behatTests])
 
                 for command in commands:
