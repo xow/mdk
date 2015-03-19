@@ -19,7 +19,8 @@ list($options, $unrecognized) = cli_get_params(
         'size' => false,
         'fixeddataset' => false,
         'filesizelimit' => false,
-        'quiet' => false
+        'quiet' => false,
+        'category' => false
     ),
     array(
         'h' => 'help'
@@ -41,6 +42,7 @@ Options:
 --fixeddataset   Use a fixed data set instead of randomly generated data
 --filesizelimit  Limits the size of the generated files to the specified bytes
 --quiet          Do not show any output
+--category       The id of the category to which the courses should be added
 
 -h, --help     Print out this help
 ";
@@ -68,6 +70,10 @@ try {
     $size = tool_generator_course_backend::size_for_name($sizename);
 } catch (coding_exception $e) {
     cli_error("Invalid size ($sizename). Use --help for help.");
+}
+
+if (isset($options['category']) && $options['category'] != 1 && $DB->get_record('course_categories', array('id' => $options['category']))) {
+    cli_error("Invalid course category. Please specify a category id that exists already");
 }
 
 function romanic_number($integer, $upcase = true)
@@ -304,7 +310,10 @@ foreach ($coursenames as $course) {
     }
 
     if ($backend) {
-        $backend->make();
+        $courseid = $backend->make();
+        if (isset($options['category'])) {
+            move_courses(array($courseid), $options['category']);
+        }
     }
 }
 
