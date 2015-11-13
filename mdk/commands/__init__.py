@@ -42,7 +42,7 @@ commandsList = [
     'init',
     'install',
     'js',
-    'meerkat',
+    'review',
     'phpunit',
     'plugin',
     'precheck',

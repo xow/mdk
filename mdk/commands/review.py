@@ -34,7 +34,7 @@ import os
 import difflib
 
 
-class MeerkatCommand(Command):
+class ReviewCommand(Command):
 
     _arguments = [
         (
@@ -73,7 +73,7 @@ class MeerkatCommand(Command):
             {
                 'action': 'store_true',
                 'dest': 'all',
-                'help': 'run all Meerkat utilities'
+                'help': 'run all review utilities'
             }
         ),
         (
