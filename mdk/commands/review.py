@@ -80,7 +80,7 @@ class ReviewCommand(Command):
             ['-b', '--branch'],
             {
                 'action': 'store',
-                'default': 'master', # TODO this should be MOODLE_XX_STABLE if need be
+                'default': '',
                 'help': 'the main branch to which we should compare this branch'
             }
         ),
@@ -141,8 +141,14 @@ class ReviewCommand(Command):
 
         # TODO if codechecker is not installed, then mdk plugin install local_codechecker
         # TODO if moodlecheck is not installed, then mdk plugin install local_moodlecheck
+        # TODO try to not require installing each code checker, store them somewhere safe
 
-        modifiedFiles = git.modifiedFiles(args.branch)
+        if not args.branch:
+            branch = M.get('branch')
+            if branch.isdigit():
+                branch = 'MOODLE_%s_STABLE' % branch
+
+        modifiedFiles = git.modifiedFiles(branch)
 
         if mode in ('syntax', 'all'):
 
@@ -150,7 +156,7 @@ class ReviewCommand(Command):
 
                 print '%s:' % modifiedFile
 
-                diff = git.diff(args.branch, modifiedFile)
+                diff = git.diff(branch, modifiedFile)
 
                 changedLineNums = []
                 ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@.*\n(.*\n([^@].*\n)*^)', diff, re.MULTILINE)
@@ -239,6 +245,8 @@ class ReviewCommand(Command):
     def docsCheck(self, file):
         mooodlecheck = Popen(['php', 'local/moodlecheck/cli/moodlecheck.php', '-p=%s' % file], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         return mooodlecheck.communicate()[0]
+
+    # TODO add CoverageCheck
 
     def getSubfilesWithExtension(self, folder, extension):
 
