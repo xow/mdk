@@ -149,8 +149,8 @@ class ReviewCommand(Command):
             for modifiedFile in modifiedFiles:
 
                 print '%s:' % modifiedFile
-                
-                diff = self.runCommand("git diff %s %s" % (args.branch, modifiedFile))
+
+                diff = git.diff(args.branch, modifiedFile)
 
                 changedLineNums = []
                 ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@.*\n(.*\n([^@].*\n)*^)', diff, re.MULTILINE)

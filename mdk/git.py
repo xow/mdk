@@ -90,6 +90,14 @@ class Git(object):
         else:
             return False
 
+    def diff(self, branch, path='.'):
+        cmd = 'diff %s %s' % (branch, path)
+        result = self.execute(cmd)
+        if result[0] == 0:
+            return result[1]
+        else:
+            return False
+
     def createBranch(self, branch, track=None):
         if track != None:
             cmd = 'branch --track %s %s' % (branch, track)
