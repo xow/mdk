@@ -32,6 +32,7 @@ from ..tools import question, ProcessInThread
 from subprocess import Popen, PIPE, STDOUT
 import os
 import difflib
+from ..phpunit import PHPUnit
 
 
 class ReviewCommand(Command):
@@ -225,18 +226,30 @@ class ReviewCommand(Command):
                 commands = []
 
                 if (not args.behat or args.unit):
-                    commands.extend(['mdk phpunit -r -u %s' % s for s in unitTests])
+                    for s in unitTests:
+                        if (args.run):
+                            PU = PHPUnit(self.Wp, M)
+                            PU.init()
+                            kwargs = {
+                                'unittest': s
+                            };
+                            PU.run(**kwargs);
+                        else:
+                            commands.extend(['mdk phpunit -r -u %s' % s])
 
                 if (args.behat or not args.unit):
-                    commands.extend(['mdk behat -r -f %s' % s for s in behatTests])
+                    for s in behatTests:
+                        if (args.run):
+                            print self.runCommand('mdk behat -r -f %s' % s)
+                        else:
+                            commands.extend(['mdk behat -r -f %s' % s])
 
-                for command in commands:
-                    if (args.run):
-                        print self.runCommand(command)
-                    elif (args.linify):
-                        print '%s\n' % command,
-                    else:
-                        print '%s &&' % command,
+                if (not args.run):
+                    for command in commands:
+                        if (args.linify):
+                            print '%s\n' % command,
+                        else:
+                            print '%s &&' % command,
 
     def syntaxCheck(self, file):
         codechecker = Popen(['php', 'local/codechecker/run.php', file], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
