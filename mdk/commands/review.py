@@ -78,7 +78,7 @@ class ReviewCommand(Command):
             }
         ),
         (
-            ['-b', '--branch'],
+            ['--branch'],
             {
                 'action': 'store',
                 'default': '',
@@ -98,14 +98,14 @@ class ReviewCommand(Command):
             ['-u', '--unit'],
             {
                 'action': 'store_true',
-                'help': 'Run unit tests only'
+                'help': 'Unit tests only'
             }
         ),
         (
-            ['--behat'],
+            ['-b', '--behat'],
             {
                 'action': 'store_true',
-                'help': 'Run behat tests only'
+                'help': 'Behat tests only'
             }
         ),
         (
