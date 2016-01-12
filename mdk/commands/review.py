@@ -139,6 +139,7 @@ class ReviewCommand(Command):
                 mode = args.mode
 
         git = M.git()
+        branch = args.branch;
 
         # TODO if codechecker is not installed, then mdk plugin install local_codechecker
         # TODO if moodlecheck is not installed, then mdk plugin install local_moodlecheck
