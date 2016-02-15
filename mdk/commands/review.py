@@ -145,7 +145,9 @@ class ReviewCommand(Command):
         # TODO if moodlecheck is not installed, then mdk plugin install local_moodlecheck
         # TODO try to not require installing each code checker, store them somewhere safe
 
-        if not args.branch:
+        if args.branch:
+            branch = args.branch
+        else:
             branch = M.get('branch')
             if branch.isdigit():
                 branch = 'MOODLE_%s_STABLE' % branch
