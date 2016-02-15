@@ -82,22 +82,6 @@ class Git(object):
         else:
             return False
 
-    def modifiedFiles(self, branch):
-        cmd = 'diff %s --name-only' % branch
-        result = self.execute(cmd)
-        if result[0] == 0:
-            return result[1].strip().split('\n')
-        else:
-            return False
-
-    def diff(self, branch, path='.'):
-        cmd = 'diff %s %s' % (branch, path)
-        result = self.execute(cmd)
-        if result[0] == 0:
-            return result[1]
-        else:
-            return False
-
     def createBranch(self, branch, track=None):
         if track != None:
             cmd = 'branch --track %s %s' % (branch, track)
@@ -131,6 +115,14 @@ class Git(object):
         cmd = 'remote rm %s' % remote
         result = self.execute(cmd)
         return result[0] == 0
+
+    def diff(self, branch, path='.'):
+        cmd = 'diff %s %s' % (branch, path)
+        result = self.execute(cmd)
+        if result[0] == 0:
+            return result[1]
+        else:
+            return False
 
     def execute(self, cmd, path=None):
         if path == None:
@@ -243,6 +235,14 @@ class Git(object):
         """Return the latest titles of the commit messages"""
         messages = self.log(count=count, since=since, path=path, format='%s')
         return messages.split('\n')[:-1]
+
+    def modifiedFiles(self, branch):
+        cmd = 'diff %s --name-only' % branch
+        result = self.execute(cmd)
+        if result[0] == 0:
+            return result[1].strip().split('\n')
+        else:
+            return False
 
     def pick(self, refs=None, abort=None, continu=None):
         """Wrapper for the cherry-pick command
