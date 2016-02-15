@@ -149,9 +149,7 @@ class ReviewCommand(Command):
         if args.branch:
             branch = args.branch
         else:
-            branch = M.get('branch')
-            if branch.isdigit():
-                branch = 'MOODLE_%s_STABLE' % branch
+            branch = M.get('stablebranch')
 
         modifiedFiles = git.modifiedFiles(branch)
 
