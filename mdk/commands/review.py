@@ -124,7 +124,7 @@ class ReviewCommand(Command):
         M = self.Wp.resolve()
         if not M:
             raise Exception('This is not a Moodle instance')
-	self.M = M;
+        self.M = M;
 
         # Get the mode.
         if args.syntax:
@@ -230,7 +230,7 @@ class ReviewCommand(Command):
                     for s in behatTests:
                         if (args.run):
                             (returncode, out, err) = process('mdk behat -r -f %s' % s, cwd=M.get('path')) # TODO Use behat.py
-			    print err or out;
+                            print err or out;
                         else:
                             commands.extend(['mdk behat -r -f %s' % s])
 
@@ -243,11 +243,11 @@ class ReviewCommand(Command):
 
     def syntaxCheck(self, file):
         (returncode, out, err) = self.M.cli('/local/codechecker/run.php', args=file)
-	return err or out;
+        return err or out;
 
     def docsCheck(self, file):
         (returncode, out, err) = self.M.cli('/local/moodlecheck/cli/moodlecheck.php', args='-p=%s' % file)
-	return err or out;
+        return err or out;
 
     # TODO add CoverageCheck
 
@@ -275,18 +275,18 @@ class ReviewCommand(Command):
         return subfilesWithExtension
 
     def getChangedLines(self, diff):
-	changedLines = []
-	ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@.*\n(.*\n([^@].*\n)*^)', diff, re.MULTILINE)
+        changedLines = []
+        ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@.*\n(.*\n([^@].*\n)*^)', diff, re.MULTILINE)
 
-	for lineRange in ranges:
-	    start = int(lineRange[2])
-	    lineNo = start
+        for lineRange in ranges:
+            start = int(lineRange[2])
+            lineNo = start
 
-	    thisDiff = lineRange[4].splitlines()
-	    for diffLine in thisDiff:
-		if re.match(r'\s*\+', diffLine):
-		    changedLines.append(lineNo)
-		if re.match(r'\s*\-', diffLine):
-		    lineNo -= 1
-		lineNo += 1
-	return changedLines;
+            thisDiff = lineRange[4].splitlines()
+            for diffLine in thisDiff:
+                if re.match(r'\s*\+', diffLine):
+                    changedLines.append(lineNo)
+                if re.match(r'\s*\-', diffLine):
+                    lineNo -= 1
+                lineNo += 1
+        return changedLines;
