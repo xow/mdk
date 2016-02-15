@@ -28,7 +28,7 @@ import logging
 from datetime import datetime
 from .. import tools, jira, fetch
 from ..command import Command
-from ..tools import question
+from ..tools import question, process
 from subprocess import Popen, PIPE, STDOUT
 import os
 import difflib
@@ -229,7 +229,8 @@ class ReviewCommand(Command):
                 if (args.behat or not args.unit):
                     for s in behatTests:
                         if (args.run):
-                            print self.runCommand('mdk behat -r -f %s' % s) # TODO call MDK library instead
+                            (returncode, out, err) = process('mdk behat -r -f %s' % s, cwd=M.get('path')) # TODO Use behat.py
+			    print err or out;
                         else:
                             commands.extend(['mdk behat -r -f %s' % s])
 
@@ -272,10 +273,6 @@ class ReviewCommand(Command):
                 pass
 
         return subfilesWithExtension
-
-    def runCommand(self, command):
-        program = Popen(command.split(' '), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        return program.communicate()[0]
 
     def getChangedLines(self, diff):
 	changedLines = []
