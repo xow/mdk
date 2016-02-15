@@ -28,7 +28,7 @@ import logging
 from datetime import datetime
 from .. import tools, jira, fetch
 from ..command import Command
-from ..tools import question, ProcessInThread
+from ..tools import question
 from subprocess import Popen, PIPE, STDOUT
 import os
 import difflib
@@ -124,6 +124,7 @@ class ReviewCommand(Command):
         M = self.Wp.resolve()
         if not M:
             raise Exception('This is not a Moodle instance')
+	self.M = M;
 
         # Get the mode.
         if args.syntax:
@@ -161,22 +162,7 @@ class ReviewCommand(Command):
                 print '%s:' % modifiedFile
 
                 diff = git.diff(branch, modifiedFile)
-
-                changedLineNums = []
-                ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@.*\n(.*\n([^@].*\n)*^)', diff, re.MULTILINE)
-
-                for lineRange in ranges:
-                    start = int(lineRange[2])
-                    lineNo = start
-
-                    thisDiff = lineRange[4].splitlines()
-                    for diffLine in thisDiff:
-                        if re.match(r'\s*\+', diffLine):
-                            changedLineNums.append(lineNo)
-                        if re.match(r'\s*\-', diffLine):
-                            lineNo -= 1
-                        lineNo += 1
-
+                changedLineNums = self.getChangedLines(diff)
                 changedLinesRegex = '|'.join([str(x) for x in changedLineNums])
 
                 syntaxResults = self.syntaxCheck(modifiedFile)
@@ -235,7 +221,7 @@ class ReviewCommand(Command):
                             PU.init()
                             kwargs = {
                                 'unittest': s
-                            };
+                            }
                             PU.run(**kwargs);
                         else:
                             commands.extend(['mdk phpunit -r -u %s' % s])
@@ -243,7 +229,7 @@ class ReviewCommand(Command):
                 if (args.behat or not args.unit):
                     for s in behatTests:
                         if (args.run):
-                            print self.runCommand('mdk behat -r -f %s' % s)
+                            print self.runCommand('mdk behat -r -f %s' % s) # TODO call MDK library instead
                         else:
                             commands.extend(['mdk behat -r -f %s' % s])
 
@@ -255,12 +241,12 @@ class ReviewCommand(Command):
                             print '%s &&' % command,
 
     def syntaxCheck(self, file):
-        codechecker = Popen(['php', 'local/codechecker/run.php', file], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        return codechecker.communicate()[0]
+        (returncode, out, err) = self.M.cli('/local/codechecker/run.php', args=file)
+	return err or out;
 
     def docsCheck(self, file):
-        mooodlecheck = Popen(['php', 'local/moodlecheck/cli/moodlecheck.php', '-p=%s' % file], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        return mooodlecheck.communicate()[0]
+        (returncode, out, err) = self.M.cli('/local/moodlecheck/cli/moodlecheck.php', args='-p=%s' % file)
+	return err or out;
 
     # TODO add CoverageCheck
 
@@ -288,6 +274,22 @@ class ReviewCommand(Command):
         return subfilesWithExtension
 
     def runCommand(self, command):
-
         program = Popen(command.split(' '), stdout=PIPE, stdin=PIPE, stderr=STDOUT)
         return program.communicate()[0]
+
+    def getChangedLines(self, diff):
+	changedLines = []
+	ranges = re.findall(r'@@.*-(.*),(.*)\+(.*),(.*)@@.*\n(.*\n([^@].*\n)*^)', diff, re.MULTILINE)
+
+	for lineRange in ranges:
+	    start = int(lineRange[2])
+	    lineNo = start
+
+	    thisDiff = lineRange[4].splitlines()
+	    for diffLine in thisDiff:
+		if re.match(r'\s*\+', diffLine):
+		    changedLines.append(lineNo)
+		if re.match(r'\s*\-', diffLine):
+		    lineNo -= 1
+		lineNo += 1
+	return changedLines;
